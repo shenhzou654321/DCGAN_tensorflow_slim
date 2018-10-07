@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf8
 #
-#       @author       : zhangduo@baidu.com
+#       @author       : tcund@126.com
 #       @file         : data_provider.py
 #       @date         : 2018/10/07 09:57
 import os

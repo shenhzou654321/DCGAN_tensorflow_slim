@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf8
 #
-#       @author       : zhangduo@baidu.com
+#       @author       : tcund@126.com
 #       @file         : train.py
 #       @date         : 2018/10/07 09:49
 import tensorflow as tf

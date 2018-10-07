@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf8
 #
-#       @author       : zhangduo@baidu.com
+#       @author       : tcund@126.com
 #       @file         : dcgan.py
 #       @date         : 2018/10/06 10:27
 import tensorflow as tf
