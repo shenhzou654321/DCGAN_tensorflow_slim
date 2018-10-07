@@ -7,6 +7,7 @@
 import tensorflow as tf
 import math
 import numpy as np
+import os
 slim = tf.contrib.slim
 
 class DCGAN(object):
@@ -81,11 +82,13 @@ class DCGAN(object):
             self.fake_prob, self.fake_logit = self.discriminator(self.gen_img, True, True)
             #self.fake_logit = tf.Print(self.fake_logit, [tf.shape(self.z), tf.shape(self.gen_img)], summarize=100)
             fake_prob_sum = tf.summary.histogram("fake_prob", self.fake_prob)
-            self.d_real_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.real_logit, labels=tf.ones_like(self.real_logit)))
-            self.d_fake_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.fake_logit, labels=tf.zeros_like(self.fake_logit)))
+            real_loss_tensor = tf.nn.sigmoid_cross_entropy_with_logits(logits=self.real_logit, labels=tf.ones_like(self.real_logit))
+            fake_loss_tensor = tf.nn.sigmoid_cross_entropy_with_logits(logits=self.fake_logit, labels=tf.zeros_like(self.fake_logit))
+            self.d_real_loss = tf.reduce_mean(real_loss_tensor)
+            self.d_fake_loss = tf.reduce_mean(fake_loss_tensor)
             d_loss_real_sum = tf.summary.scalar("d_loss_real", self.d_real_loss)
             d_loss_fake_sum = tf.summary.scalar("d_loss_fake", self.d_fake_loss)
-            self.d_loss = self.d_real_loss + self.d_fake_loss
+            self.d_loss = tf.reduce_mean(tf.concat([real_loss_tensor, fake_loss_tensor], 0))
             #self.d_loss = self.d_fake_loss
             d_loss_sum = tf.summary.scalar("d_loss", self.d_loss)
             self.g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.fake_logit, labels=tf.ones_like(self.fake_logit)))
@@ -114,14 +117,13 @@ class DCGAN(object):
         self.writer = tf.summary.FileWriter("./logs", self.sess.graph)
 
     def save_model(self):
-        self.saver.save(self.sess, self.ckpt_path)
+        self.saver.save(self.sess, os.path.join(self.ckpt_path, 'model'), self.d_step)
 
     def train(self, imgs, sample_len):
         model_vars = tf.global_variables()
         sample_z = np.random.uniform(-1, 1, size=(sample_len, self.gen_sample_dim)).astype(np.float32)
         ds, _, d_sum = self.sess.run([self.d_step, self.d_train_step, self.d_sum], feed_dict = {self.img_input: imgs, self.z: sample_z, self.is_training: True})
         self.writer.add_summary(d_sum, ds)
-        #"""
         gs, _, g_sum = self.sess.run([self.g_step, self.g_train_step, self.g_sum], feed_dict = {self.img_input: np.zeros([1, self.img_size, self.img_size, 3]), self.z: sample_z, self.is_training: True})
         self.writer.add_summary(g_sum, gs)
         gs, _, g_sum = self.sess.run([self.g_step, self.g_train_step, self.g_sum], feed_dict = {self.img_input: np.zeros([1, self.img_size, self.img_size, 3]), self.z: sample_z, self.is_training: True})
@@ -129,10 +131,9 @@ class DCGAN(object):
         loss_d_real, loss_d_fake, loss_g = self.sess.run([self.d_real_loss, self.d_fake_loss, self.g_loss], feed_dict = {self.img_input: imgs, self.z: sample_z, self.is_training: True})
 
         print("ds:%d gs:%d -> d_real_loss: %.6f, d_fake_loss: %.6f g_loss: %.6f" % (ds, gs, loss_d_real, loss_d_fake, loss_g))
-        #"""
 
     def predict(self, imgs):
-        prob, = self.sess.run([self.real_prob], feed_dict = {self.img_input: imgs})
+        prob, = self.sess.run([self.real_prob], feed_dict = {self.img_input: imgs, self.is_training: False})
         return prob
 
 if __name__ == '__main__':

@@ -47,5 +47,13 @@ class DataProvider(object):
                     batch[idx] = self.datas[data_idxs]
             yield batch
 
+    def iter(self):
+        if self.datas is None:
+            for path in self.file_paths:
+                yield open_img(path, self.out_size, self.gray)
+        else:
+            for data in self.datas:
+                yield data
+
 if __name__ == '__main__':
     pass

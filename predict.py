@@ -2,8 +2,8 @@
 # encoding: utf8
 #
 #       @author       : zhangduo@baidu.com
-#       @file         : train.py
-#       @date         : 2018/10/07 09:49
+#       @file         : predict.py
+#       @date         : 2018/10/07 21:03
 import tensorflow as tf
 import dcgan
 import data_provider
@@ -36,12 +36,9 @@ def main(_):
     dcgan_obj.init_model()
     dp = data_provider.DataProvider(FLAGS.data_dir, FLAGS.input_size)
     dp.load()
-    try:
-        for batch in dp.batchs(10000, FLAGS.batch_size):
-            dcgan_obj.train(batch, FLAGS.sample_size)
-    except:
-        pass
-    dcgan_obj.save_model()
+    for img in dp.iter():
+        prob = dcgan_obj.predict([img])
+        print prob
 
 if __name__ == '__main__':
     tf.app.run()
