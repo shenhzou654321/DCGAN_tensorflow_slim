@@ -1,1 +1,3 @@
-` python train.py --data_dir ./data/celebA/
+```
+python train.py --data_dir ./data/celebA/
+```
